@@ -8,11 +8,17 @@ Projeto CET - Cibersegurança
 import json
 import csv
 import re
+import sys
 from datetime import datetime
 from collections import defaultdict, Counter
 from pathlib import Path
 from dataclasses import dataclass, asdict
 import argparse
+
+# A consola do Windows usa cp1252 por omissão, que não sabe codificar os
+# carateres Unicode (✓, ✗, …) usados nas mensagens abaixo.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 
 @dataclass
@@ -34,7 +40,7 @@ class WindowsEventLogAnalyzer:
     CRITICAL_EVENTS = {
         4625: {"name": "Failed Logon", "severity": "high", "pattern": "invalid"},
         4724: {"name": "Password Reset Attempt", "severity": "medium"},
-        4732: {"name": "Member Added to Group", "severity": "medium"},
+        4732: {"name": "Member Added to Local Group", "severity": "medium"},
         4733: {"name": "Member Removed from Group", "severity": "medium"},
         4728: {"name": "Member Added to Global Group", "severity": "high"},
         4756: {"name": "Member Added to Universal Group", "severity": "high"},
@@ -51,11 +57,14 @@ class WindowsEventLogAnalyzer:
         4699: {"name": "Scheduled Task Deleted", "severity": "medium"},
         4700: {"name": "Scheduled Task Disabled", "severity": "low"},
         4701: {"name": "Scheduled Task Updated", "severity": "medium"},
+        4702: {"name": "Scheduled Task Renamed", "severity": "low"},
+        4703: {"name": "Scheduled Task Enabled", "severity": "low"},
+        4704: {"name": "User Right Assigned", "severity": "high"},
         4713: {"name": "Kerberos Policy Changed", "severity": "high"},
         4719: {"name": "Security Policy Changed", "severity": "high"},
         4797: {"name": "User Account Locked Out", "severity": "medium"},
         5140: {"name": "Network Share Accessed", "severity": "low"},
-        5145: {"name": "Network Share Check Permissions", "severity": "low"},
+        5145: {"name": "Network Share Permission Checked", "severity": "low"},
     }
     
     def __init__(self):
@@ -100,9 +109,14 @@ class WindowsEventLogAnalyzer:
             self.statistics['total_events'] += 1
             
             # Detecção de eventos críticos
-            if str(event_id) in self.CRITICAL_EVENTS:
-                event_info = self.CRITICAL_EVENTS[str(event_id)]
-                
+            try:
+                event_id_int = int(event_id)
+            except (TypeError, ValueError):
+                event_id_int = None
+
+            if event_id_int in self.CRITICAL_EVENTS:
+                event_info = self.CRITICAL_EVENTS[event_id_int]
+
                 alert = EventAlert(
                     event_id=str(event_id),
                     timestamp=timestamp,
@@ -146,7 +160,11 @@ class WindowsEventLogAnalyzer:
     def _build_description(self, event):
         """Constrói descrição detalhada do evento"""
         event_id = event.get('EventID', event.get('event_id', ''))
-        
+        try:
+            event_id = int(event_id)
+        except (TypeError, ValueError):
+            pass
+
         if event_id == 4625:  # Failed Logon
             return f"Falha de logon para utilizador {event.get('TargetUserName', 'Unknown')} de {event.get('IpAddress', 'Unknown')}"
         elif event_id == 4672:  # Special Privileges
@@ -523,7 +541,11 @@ class WindowsEventLogAnalyzer:
         """
         
         for event_id, count in sorted(event_counts.items(), key=lambda x: x[1], reverse=True):
-            event_info = self.CRITICAL_EVENTS.get(int(event_id), {"name": "Desconhecido", "severity": "info"})
+            try:
+                event_id_int = int(event_id)
+            except (TypeError, ValueError):
+                event_id_int = None
+            event_info = self.CRITICAL_EVENTS.get(event_id_int, {"name": "Desconhecido", "severity": "info"})
             html += f"""
                 <tr>
                     <td>{event_id}</td>

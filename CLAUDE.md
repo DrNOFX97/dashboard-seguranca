@@ -44,7 +44,7 @@ Frontend is dependency-free HTML/CSS/JS: open `wazuh-dashboard/frontend/index.ht
 Single-file pipeline built around `WindowsEventLogAnalyzer`:
 
 1. **Parse** — `parse_evtx_json()` / `parse_csv_logs()` load raw events into `self.events`.
-2. **Analyze** — `analyze_events()` walks every event, tallies `self.statistics`, and for any Event ID present in the `CRITICAL_EVENTS` dict (23 Windows Security Event IDs → name/severity) creates an `EventAlert` dataclass appended to `self.alerts`.
+2. **Analyze** — `analyze_events()` walks every event, tallies `self.statistics`, and for any Event ID present in the `CRITICAL_EVENTS` dict (27 Windows Security Event IDs → name/severity) creates an `EventAlert` dataclass appended to `self.alerts`. The lookup casts `event_id` to `int` before checking `CRITICAL_EVENTS` (whose keys are `int`) — a past bug here compared a `str(event_id)` against the `int` keys, which silently matched nothing and meant no per-event alerts were ever generated (only the brute-force anomaly alert survived). Keep this cast when touching this code.
 3. **Detect anomalies** — `_detect_anomalies()` runs separately (currently: brute-force detection — >5 failed logons, Event ID 4625, from the same `TargetUserName` triggers a synthetic `critical` alert).
 4. **Report** — `generate_html_report()` renders a self-contained HTML dashboard (inline CSS, no external assets); `export_alerts_json()` writes structured alerts for downstream tooling.
 
