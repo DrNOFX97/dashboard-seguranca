@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Cibersegurança — CET</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>🔒 Dashboard de Cibersegurança</h1>
+      <p>Ligado ao Wazuh em tempo real — Projeto CET</p>
+    </div>
+    <div class="controls">
+      <label for="window-select">Janela temporal:</label>
+      <select id="window-select">
+        <option value="1">Última hora</option>
+        <option value="6">Últimas 6 horas</option>
+        <option value="24" selected>Últimas 24 horas</option>
+        <option value="168">Última semana</option>
+      </select>
+      <button id="refresh-btn">🔄 Atualizar</button>
+      <span id="status-indicator" class="status-indicator status-unknown">● a verificar</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="kpi-grid" id="kpi-grid">
+      <div class="card">
+        <h3>Total de Alertas</h3>
+        <div class="value" id="kpi-total">—</div>
+      </div>
+      <div class="card critical">
+        <h3>Críticos</h3>
+        <div class="value" id="kpi-critical">—</div>
+      </div>
+      <div class="card high">
+        <h3>Altos</h3>
+        <div class="value" id="kpi-high">—</div>
+      </div>
+      <div class="card medium">
+        <h3>Médios</h3>
+        <div class="value" id="kpi-medium">—</div>
+      </div>
+      <div class="card low">
+        <h3>Baixos</h3>
+        <div class="value" id="kpi-low">—</div>
+      </div>
+      <div class="card">
+        <h3>Agentes Ativos</h3>
+        <div class="value" id="kpi-agents">—</div>
+      </div>
+    </section>
+
+    <section class="panel" id="brute-force-panel" style="display:none">
+      <h2>⚠️ Possíveis Ataques de Força Bruta</h2>
+      <div id="brute-force-list"></div>
+    </section>
+
+    <div class="two-col">
+      <section class="panel">
+        <h2>🚨 Alertas Recentes</h2>
+        <div class="filter-row">
+          <select id="severity-filter">
+            <option value="">Todas as severidades</option>
+            <option value="critical">Crítico</option>
+            <option value="high">Alto</option>
+            <option value="medium">Médio</option>
+            <option value="low">Baixo</option>
+          </select>
+        </div>
+        <div id="alerts-list" class="alerts-list">
+          <p class="empty-state">A carregar...</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>🖥️ Agentes</h2>
+        <div id="agents-list" class="agents-list">
+          <p class="empty-state">A carregar...</p>
+        </div>
+
+        <h2 style="margin-top: 30px;">📊 Top Eventos</h2>
+        <table id="top-events-table">
+          <thead>
+            <tr><th>Event ID</th><th>Nome</th><th>Contagem</th></tr>
+          </thead>
+          <tbody id="top-events-body"></tbody>
+        </table>
+      </section>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>Dashboard de Cibersegurança — Fase 2 do projeto CET. Ligação em tempo real ao Wazuh.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

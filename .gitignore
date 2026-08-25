@@ -1,0 +1,9 @@
+# Segredos / configuração local — nunca comitar
+.env
+*.env
+!.env.example
+
+# Ambientes Python
+.venv/
+__pycache__/
+*.pyc
